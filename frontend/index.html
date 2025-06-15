@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IntelliFix - Python Code Corrector</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #121212;
+      color: #ffffff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    h1 {
+  margin-bottom: 10px;
+  transition: color 0.3s;
+}
+
+body:not(.light-mode) h1 {
+  color: #00ffd0;
+}
+
+body.light-mode h1 {
+  color: #222222; /* Or use #000000 for black */
+}
+
+
+    .theme-toggle {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      justify-content: center;
+      max-width: 1200px;
+      width: 100%;
+    }
+
+    .box {
+      flex: 1 1 300px;
+      background-color: #1e1e1e;
+      border-radius: 12px;
+      padding: 15px;
+      box-shadow: 0 0 15px rgba(0, 255, 208, 0.1);
+      transition: background-color 0.3s;
+    }
+
+    textarea {
+      width: 100%;
+      height: 300px;
+      resize: vertical;
+      background-color: #2c2c2c;
+      color: #ffffff;
+      border: 1px solid #555;
+      border-radius: 8px;
+      padding: 10px;
+      font-family: monospace;
+      font-size: 14px;
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    button {
+      background-color: #00ffd0;
+      border: none;
+      color: black;
+      padding: 12px 24px;
+      font-size: 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      margin: 20px 0;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #00bfa0;
+    }
+
+    ul {
+      padding-left: 20px;
+      margin: 0;
+    }
+
+    li {
+      margin-bottom: 8px;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        flex-direction: column;
+        align-items: stretch;
+      }
+    }
+
+    body.light-mode {
+      background-color: #ffffff;
+      color: #000000;
+    }
+
+    body.light-mode .box {
+      background-color: #f0f0f0;
+    }
+
+    body.light-mode textarea {
+      background-color: #ffffff;
+      color: #000000;
+      border: 1px solid #aaa;
+    }
+  </style>
+</head>
+<body>
+  <div class="theme-toggle">
+    <label for="toggleSwitch">🌗 Theme</label>
+    <input type="checkbox" id="toggleSwitch" />
+  </div>
+
+  <h1>🛠 IntelliFix - Python Code Corrector</h1>
+
+  <div class="container">
+    <div class="box">
+      <h2>🔤 Input Code</h2>
+      <textarea id="inputCode" placeholder="Paste your Python code here..."></textarea>
+    </div>
+
+    <div class="box">
+      <h2>✅ Corrected Code</h2>
+      <textarea id="outputCode" readonly placeholder="Corrected code will appear here..."></textarea>
+    </div>
+
+    <div class="box">
+      <h2>🧠 Corrections Applied</h2>
+      <ul id="correctionsList"></ul>
+    </div>
+  </div>
+
+  <button onclick="correctCode()">Correct Code</button>
+
+  <script>
+    async function correctCode() {
+      const inputCode = document.getElementById("inputCode").value;
+
+      const response = await fetch("http://127.0.0.1:8000/correct", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ code: inputCode })
+      });
+
+      const result = await response.json();
+      document.getElementById("outputCode").value = result.corrected_code;
+
+      const list = document.getElementById("correctionsList");
+      list.innerHTML = "";
+      if (result.corrections && result.corrections.length > 0) {
+        result.corrections.forEach(item => {
+          const li = document.createElement("li");
+          li.textContent = item;
+          list.appendChild(li);
+        });
+      } else {
+        const li = document.createElement("li");
+        li.textContent = "No corrections applied.";
+        list.appendChild(li);
+      }
+    }
+
+    document.getElementById("toggleSwitch").addEventListener("change", function () {
+      document.body.classList.toggle("light-mode", this.checked);
+    });
+  </script>
+</body>
+</html>
