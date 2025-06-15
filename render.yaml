@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: intellifix-backend
+    env: python
+    repo: https://github.com/TANAY895/IntelliFix
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: uvicorn backend.main:app --host 0.0.0.0 --port 10000
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11
+    plan: free
+    autoDeploy: true
+    branch: main

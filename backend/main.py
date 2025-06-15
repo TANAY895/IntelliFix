@@ -1,25 +1,25 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
-from correct_code import correct_code
-
-from fastapi.middleware.cors import CORSMiddleware
+from correct_code import correct_code  # ✅ your logic
 
 app = FastAPI()
 
-# Allow all frontend domains (you can restrict this later)
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+app.mount("/static", StaticFiles(directory="static"), name="static")
+templates = Jinja2Templates(directory="templates")
 
-class CodeInput(BaseModel):
+class CodeRequest(BaseModel):
     code: str
 
+@app.get("/", response_class=HTMLResponse)
+async def read_root(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
+
 @app.post("/correct")
-def fix_code(data: CodeInput):
-    corrected_code, corrections = correct_code(data.code)
+async def correct_code_api(request: CodeRequest):
+    corrected_code, corrections = correct_code(request.code)
     return {
         "corrected_code": corrected_code,
         "corrections": corrections
