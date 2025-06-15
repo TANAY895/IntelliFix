@@ -16,29 +16,43 @@ BUILTINS = set(dir(builtins)) | {
 }
 
 # ------------------------------
-# FIX TYPOS IN BUILTIN NAMES
+# FIX TYPOS IN BUILTIN NAMES (function calls only)
 # ------------------------------
 def fix_builtin_typos(code):
     changes = []
     try:
         tokens = list(tokenize.generate_tokens(io.StringIO(code).readline))
         new_tokens = []
+        skip_next = False
 
-        for toknum, tokval, start, end, line in tokens:
-            if toknum == tokenize.NAME and tokval not in BUILTINS:
-                match = difflib.get_close_matches(tokval, BUILTINS, n=1, cutoff=0.7)
-                if match:
-                    changes.append(f"Fixed typo: {tokval} → {match[0]}")
-                    tokval = match[0]
-            new_tokens.append((toknum, tokval))
-        
+        for i, (toknum, tokval, start, end, line) in enumerate(tokens):
+            if skip_next:
+                skip_next = False
+                new_tokens.append((toknum, tokval))
+                continue
+
+            if toknum == tokenize.NAME:
+                # Check if the next token is a '(' (i.e. it's being called)
+                if i + 1 < len(tokens) and tokens[i + 1][1] == '(':
+                    if tokval not in BUILTINS:
+                        match = difflib.get_close_matches(tokval, BUILTINS, n=1, cutoff=0.8)
+                        if match:
+                            changes.append(f"Fixed builtin typo: {tokval} → {match[0]}")
+                            tokval = match[0]
+                new_tokens.append((toknum, tokval))
+            else:
+                new_tokens.append((toknum, tokval))
+            
+            if tokval == 'def':
+                skip_next = True  # Skip correcting the function name itself
+
         fixed_code = tokenize.untokenize(new_tokens)
         return fixed_code, changes
     except Exception as e:
         return code, [f"Typo fix failed: {str(e)}"]
 
 # ------------------------------
-# FIX STRUCTURAL ISSUES (print, def)
+# FIX STRUCTURAL ISSUES
 # ------------------------------
 def fix_structure(code):
     changes = []
@@ -46,6 +60,7 @@ def fix_structure(code):
     fixed_lines = []
     for line in lines:
         orig = line
+
         # Fix function def without parentheses
         if re.match(r'^\s*def\s+\w+\s+[^\(:]+', line):
             parts = re.split(r'\s+', line.strip(), maxsplit=2)
