@@ -11,7 +11,7 @@ from correct_code import correct_code  # ✅ your logic
 
 app = FastAPI()
 
-templates = Jinja2Templates(directory="templates")
+templates = Jinja2Templates(directory="backend/templates")
 
 class CodeRequest(BaseModel):
     code: str
