@@ -11,7 +11,6 @@ from correct_code import correct_code  # ✅ your logic
 
 app = FastAPI()
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
 class CodeRequest(BaseModel):
